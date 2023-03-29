@@ -1,17 +1,8 @@
 {
   "name": "vscode-chatgpt",
-  "publisher": "YOUR_PUBLISHER_NAME",
   "displayName": "vscode-chatgpt",
-  "icon": "images/ai-logo.png",
-  "description": "vscode-chatgpt",
   "version": "3.9.7-0",
-  "aiKey": "",
-  "repository": {
-    "url": "https://github.com/YOUR_PUBLISHER_NAME/vscode-chatgpt"
-  },
-  "engines": {
-    "vscode": "^1.73.0"
-  },
+  "description": "vscode-chatgpt",
   "categories": [
     "Testing",
     "Data Science",
@@ -34,127 +25,21 @@
     "copilot",
     "ai"
   ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
+  "repository": {
+    "url": "https://github.com/YOUR_PUBLISHER_NAME/vscode-chatgpt"
+  },
+  "publisher": "YOUR_PUBLISHER_NAME",
   "main": "./out/extension.js",
+  "scripts": {
+    "build": "npm run -S esbuild-base -- --sourcemap",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
+    "test": "eslint src --ext ts && tsc --noEmit",
+    "vscode:prepublish": "rimraf out && npm run esbuild-base -- --minify",
+    "watch": "npm run -S esbuild-base -- --sourcemap --watch",
+    "format": "prettier . -w"
+  },
   "contributes": {
-    "menus": {
-      "editor/context": [
-        {
-          "command": "vscode-chatgpt.generateCode",
-          "group": "chatGpt@1",
-          "when": "editorHasSelection && generateCode-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.addTests",
-          "group": "chatGpt@2",
-          "when": "editorHasSelection && addTests-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.findProblems",
-          "group": "chatGpt@3",
-          "when": "editorHasSelection && findProblems-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.optimize",
-          "group": "chatGpt@4",
-          "when": "editorHasSelection && optimize-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.explain",
-          "group": "chatGpt@5",
-          "when": "editorHasSelection && explain-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.addComments",
-          "group": "chatGpt@6",
-          "when": "editorHasSelection && addComments-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.completeCode",
-          "group": "chatGpt@7",
-          "when": "editorHasSelection && completeCode-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.adhoc",
-          "group": "chatGpt@8",
-          "when": "editorHasSelection && adhoc-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.customPrompt1",
-          "group": "chatGpt@9",
-          "when": "editorHasSelection && customPrompt1-enabled"
-        },
-        {
-          "command": "vscode-chatgpt.customPrompt2",
-          "group": "chatGpt@10",
-          "when": "editorHasSelection && customPrompt2-enabled"
-        }
-      ]
-    },
-    "keybindings": [
-      {
-        "command": "vscode-chatgpt.generateCode",
-        "key": "ctrl+shift+a",
-        "mac": "cmd+shift+a",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.addTests",
-        "key": "ctrl+k ctrl+shift+1",
-        "mac": "cmd+k cmd+shift+1",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.findProblems",
-        "key": "ctrl+k ctrl+shift+2",
-        "mac": "cmd+k cmd+shift+2",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.optimize",
-        "key": "ctrl+k ctrl+shift+3",
-        "mac": "cmd+k cmd+shift+3",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.explain",
-        "key": "ctrl+k ctrl+shift+4",
-        "mac": "cmd+k cmd+shift+4",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.addComments",
-        "key": "ctrl+k ctrl+shift+5",
-        "mac": "cmd+k cmd+shift+5",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.completeCode",
-        "key": "ctrl+k ctrl+shift+6",
-        "mac": "cmd+k cmd+shift+6",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.adhoc",
-        "key": "ctrl+k ctrl+shift+7",
-        "mac": "cmd+k cmd+shift+7",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.customPrompt1",
-        "key": "ctrl+k ctrl+shift+8",
-        "mac": "cmd+k cmd+shift+8",
-        "when": "editorHasSelection"
-      },
-      {
-        "command": "vscode-chatgpt.customPrompt2",
-        "key": "ctrl+k ctrl+shift+9",
-        "mac": "cmd+k cmd+shift+9",
-        "when": "editorHasSelection"
-      }
-    ],
     "commands": [
       {
         "command": "vscode-chatgpt.freeText",
@@ -223,24 +108,6 @@
         "title": "ChatGPT: Export conversation"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "vscode-chatgpt-view-container",
-          "title": "ChatGPT",
-          "icon": "images/ai-logo-in.png"
-        }
-      ]
-    },
-    "views": {
-      "vscode-chatgpt-view-container": [
-        {
-          "type": "webview",
-          "id": "vscode-chatgpt.view",
-          "name": "Conversation window"
-        }
-      ]
-    },
     "configuration": {
       "title": "ChatGPT",
       "properties": {
@@ -496,33 +363,148 @@
           "order": 39
         }
       }
+    },
+    "keybindings": [
+      {
+        "command": "vscode-chatgpt.generateCode",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.addTests",
+        "key": "ctrl+k ctrl+shift+1",
+        "mac": "cmd+k cmd+shift+1",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.findProblems",
+        "key": "ctrl+k ctrl+shift+2",
+        "mac": "cmd+k cmd+shift+2",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.optimize",
+        "key": "ctrl+k ctrl+shift+3",
+        "mac": "cmd+k cmd+shift+3",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.explain",
+        "key": "ctrl+k ctrl+shift+4",
+        "mac": "cmd+k cmd+shift+4",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.addComments",
+        "key": "ctrl+k ctrl+shift+5",
+        "mac": "cmd+k cmd+shift+5",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.completeCode",
+        "key": "ctrl+k ctrl+shift+6",
+        "mac": "cmd+k cmd+shift+6",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.adhoc",
+        "key": "ctrl+k ctrl+shift+7",
+        "mac": "cmd+k cmd+shift+7",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.customPrompt1",
+        "key": "ctrl+k ctrl+shift+8",
+        "mac": "cmd+k cmd+shift+8",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.customPrompt2",
+        "key": "ctrl+k ctrl+shift+9",
+        "mac": "cmd+k cmd+shift+9",
+        "when": "editorHasSelection"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "vscode-chatgpt.generateCode",
+          "group": "chatGpt@1",
+          "when": "editorHasSelection && generateCode-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.addTests",
+          "group": "chatGpt@2",
+          "when": "editorHasSelection && addTests-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.findProblems",
+          "group": "chatGpt@3",
+          "when": "editorHasSelection && findProblems-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.optimize",
+          "group": "chatGpt@4",
+          "when": "editorHasSelection && optimize-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.explain",
+          "group": "chatGpt@5",
+          "when": "editorHasSelection && explain-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.addComments",
+          "group": "chatGpt@6",
+          "when": "editorHasSelection && addComments-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.completeCode",
+          "group": "chatGpt@7",
+          "when": "editorHasSelection && completeCode-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.adhoc",
+          "group": "chatGpt@8",
+          "when": "editorHasSelection && adhoc-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.customPrompt1",
+          "group": "chatGpt@9",
+          "when": "editorHasSelection && customPrompt1-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.customPrompt2",
+          "group": "chatGpt@10",
+          "when": "editorHasSelection && customPrompt2-enabled"
+        }
+      ]
+    },
+    "views": {
+      "vscode-chatgpt-view-container": [
+        {
+          "type": "webview",
+          "id": "vscode-chatgpt.view",
+          "name": "Conversation window"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vscode-chatgpt-view-container",
+          "title": "ChatGPT",
+          "icon": "images/ai-logo-in.png"
+        }
+      ]
     }
   },
-  "scripts": {
-    "vscode:prepublish": "rimraf out && npm run esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "build": "npm run -S esbuild-base -- --sourcemap",
-    "watch": "npm run -S esbuild-base -- --sourcemap --watch",
-    "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
-    "test": "eslint src --ext ts && tsc --noEmit"
-  },
-  "devDependencies": {
-    "@types/glob": "^8.0.0",
-    "@types/isomorphic-fetch": "^0.0.36",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/uuid": "^9.0.0",
-    "@types/vscode": "^1.73.0",
-    "@types/vscode-webview": "^1.57.0",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "@vscode/test-electron": "^2.2.0",
-    "esbuild": "^0.15.18",
-    "eslint": "^8.28.0",
-    "glob": "^8.0.3",
-    "mocha": "^10.1.0",
-    "ts-loader": "^9.4.1",
-    "typescript": "^4.9.3"
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "prettier": "@liutsing/prettier-config",
+  "resolutions": {
+    "clone-deep": "^4.0.1"
   },
   "dependencies": {
     "delay": "^5.0.0",
@@ -542,7 +524,28 @@
     "strip-markdown": "^5.0.0",
     "uuid": "^9.0.0"
   },
-  "resolutions": {
-    "clone-deep": "^4.0.1"
-  }
+  "devDependencies": {
+    "@liutsing/eslint-config": "^0.0.9",
+    "@liutsing/prettier-config": "^0.0.5",
+    "@types/glob": "^8.0.0",
+    "@types/isomorphic-fetch": "^0.0.36",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/uuid": "^9.0.0",
+    "@types/vscode": "^1.73.0",
+    "@types/vscode-webview": "^1.57.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "esbuild": "^0.15.18",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "ts-loader": "^9.4.1",
+    "typescript": "^4.9.3"
+  },
+  "engines": {
+    "vscode": "^1.73.0"
+  },
+  "icon": "images/ai-logo.png",
+  "aiKey": ""
 }

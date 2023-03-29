@@ -26,86 +26,84 @@ SOFTWARE.
  */
 
 // src/chatgpt-api.ts
-import Keyv from "keyv";
-import pTimeout from "p-timeout";
-import QuickLRU from "quick-lru";
-import { v4 as uuidv4 } from "uuid";
+import Keyv from 'keyv'
+import pTimeout from 'p-timeout'
+import QuickLRU from 'quick-lru'
+import { v4 as uuidv4 } from 'uuid'
 
 // src/types.ts
-var ChatGPTError = class extends Error {
-};
-var openai;
-((openai2) => {
-})(openai || (openai = {}));
+var ChatGPTError = class extends Error {}
+var openai
+;((openai2) => {})(openai || (openai = {}))
 
 // src/fetch.ts
-var fetch = globalThis.fetch;
+var fetch = globalThis.fetch
 
 // src/fetch-sse.ts
-import { createParser } from "eventsource-parser";
+import { createParser } from 'eventsource-parser'
 
 // src/stream-async-iterable.ts
 async function* streamAsyncIterable(stream) {
-  const reader = stream.getReader();
+  const reader = stream.getReader()
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      const { done, value } = await reader.read()
       if (done) {
-        return;
+        return
       }
-      yield value;
+      yield value
     }
   } finally {
-    reader.releaseLock();
+    reader.releaseLock()
   }
 }
 
 // src/fetch-sse.ts
 async function fetchSSE(url, options, fetch2 = fetch) {
-  const { onMessage, ...fetchOptions } = options;
-  const res = await fetch2(url, fetchOptions);
+  const { onMessage, ...fetchOptions } = options
+  const res = await fetch2(url, fetchOptions)
   if (!res.ok) {
-    let reason;
+    let reason
     try {
-      reason = await res.text();
+      reason = await res.text()
     } catch (err) {
-      reason = res.statusText;
+      reason = res.statusText
     }
-    const msg = `ChatGPT error ${res.status}: ${reason}`;
-    const error = new ChatGPTError(msg, { cause: res });
-    error.statusCode = res.status;
-    error.statusText = res.statusText;
-    error.reason = reason;
-    throw error;
+    const msg = `ChatGPT error ${res.status}: ${reason}`
+    const error = new ChatGPTError(msg, { cause: res })
+    error.statusCode = res.status
+    error.statusText = res.statusText
+    error.reason = reason
+    throw error
   }
   const parser = createParser((event) => {
-    if (event.type === "event") {
-      onMessage(event.data);
+    if (event.type === 'event') {
+      onMessage(event.data)
     }
-  });
+  })
   if (!res.body.getReader) {
-    const body = res.body;
+    const body = res.body
     if (!body.on || !body.read) {
-      throw new ChatGPTError('unsupported "fetch" implementation');
+      throw new ChatGPTError('unsupported "fetch" implementation')
     }
-    body.on("readable", () => {
-      let chunk;
+    body.on('readable', () => {
+      let chunk
       while (null !== (chunk = body.read())) {
-        parser.feed(chunk.toString());
+        parser.feed(chunk.toString())
       }
-    });
+    })
   } else {
     for await (const chunk of streamAsyncIterable(res.body)) {
-      const str = new TextDecoder().decode(chunk);
-      parser.feed(str);
+      const str = new TextDecoder().decode(chunk)
+      parser.feed(str)
     }
   }
 }
 
 // src/chatgpt-api.ts
-var CHATGPT_MODEL = "gpt-3.5-turbo";
-var USER_LABEL_DEFAULT = "User";
-var ASSISTANT_LABEL_DEFAULT = "ChatGPT";
+var CHATGPT_MODEL = 'gpt-3.5-turbo'
+var USER_LABEL_DEFAULT = 'User'
+var ASSISTANT_LABEL_DEFAULT = 'ChatGPT'
 var ChatGPTAPI = class {
   /**
    * Creates a new client wrapper around OpenAI's chat completion API, mimicing the official ChatGPT webapp's functionality as closely as possible.
@@ -125,7 +123,7 @@ var ChatGPTAPI = class {
   constructor(opts) {
     const {
       apiKey,
-      apiBaseUrl = "https://api.openai.com",
+      apiBaseUrl = 'https://api.openai.com',
       organization,
       debug = false,
       messageStore,
@@ -135,46 +133,46 @@ var ChatGPTAPI = class {
       maxResponseTokens = 1e3,
       getMessageById,
       upsertMessage,
-      fetch: fetch2 = fetch
-    } = opts;
-    this._apiKey = apiKey;
-    this._apiBaseUrl = apiBaseUrl;
-    this._organization = organization;
-    this._debug = !!debug;
-    this._fetch = fetch2;
+      fetch: fetch2 = fetch,
+    } = opts
+    this._apiKey = apiKey
+    this._apiBaseUrl = apiBaseUrl
+    this._organization = organization
+    this._debug = !!debug
+    this._fetch = fetch2
     this._completionParams = {
       model: CHATGPT_MODEL,
       temperature: 0.8,
       top_p: 1,
       presence_penalty: 1,
-      ...completionParams
-    };
-    this._systemMessage = systemMessage;
+      ...completionParams,
+    }
+    this._systemMessage = systemMessage
     if (this._systemMessage === void 0) {
-      const currentDate = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+      const currentDate = /* @__PURE__ */ new Date().toISOString().split('T')[0]
       this._systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.
 Knowledge cutoff: 2021-09-01
-Current date: ${currentDate}`;
+Current date: ${currentDate}`
     }
-    this._maxModelTokens = maxModelTokens;
-    this._maxResponseTokens = maxResponseTokens;
-    this._getMessageById = getMessageById ?? this._defaultGetMessageById;
-    this._upsertMessage = upsertMessage ?? this._defaultUpsertMessage;
+    this._maxModelTokens = maxModelTokens
+    this._maxResponseTokens = maxResponseTokens
+    this._getMessageById = getMessageById ?? this._defaultGetMessageById
+    this._upsertMessage = upsertMessage ?? this._defaultUpsertMessage
     if (messageStore) {
-      this._messageStore = messageStore;
+      this._messageStore = messageStore
     } else {
       this._messageStore = new Keyv({
-        store: new QuickLRU({ maxSize: 1e4 })
-      });
+        store: new QuickLRU({ maxSize: 1e4 }),
+      })
     }
     if (!this._apiKey) {
-      throw new Error("OpenAI missing required apiKey");
+      throw new Error('OpenAI missing required apiKey')
     }
     if (!this._fetch) {
-      throw new Error("Invalid environment; fetch is not defined");
+      throw new Error('Invalid environment; fetch is not defined')
     }
-    if (typeof this._fetch !== "function") {
-      throw new Error('Invalid "fetch" is not a function');
+    if (typeof this._fetch !== 'function') {
+      throw new Error('Invalid "fetch" is not a function')
     }
   }
   /**
@@ -205,220 +203,226 @@ Current date: ${currentDate}`;
       timeoutMs,
       onProgress,
       stream = onProgress ? true : false,
-      completionParams
-    } = opts;
-    let { abortSignal } = opts;
-    let abortController = null;
+      completionParams,
+    } = opts
+    let { abortSignal } = opts
+    let abortController = null
     if (timeoutMs && !abortSignal) {
-      abortController = new AbortController();
-      abortSignal = abortController.signal;
+      abortController = new AbortController()
+      abortSignal = abortController.signal
     }
     const message = {
-      role: "user",
+      role: 'user',
       id: messageId,
       parentMessageId,
-      text
-    };
-    await this._upsertMessage(message);
-    const { messages } = await this._buildMessages(text, opts);
+      text,
+    }
+    await this._upsertMessage(message)
+    const { messages } = await this._buildMessages(text, opts)
     const result = {
-      role: "assistant",
+      role: 'assistant',
       id: uuidv4(),
       parentMessageId: messageId,
-      text: ""
-    };
-    const responseP = new Promise(
-      async (resolve, reject) => {
-        var _a, _b;
-        const url = `${this._apiBaseUrl}/v1/chat/completions`;
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this._apiKey}`
-        };
-        if (this._organization) {
-          headers["OpenAI-Organization"] = this._organization;
-        }
-        const body = {
-          ...this._completionParams,
-          ...completionParams,
-          messages,
-          stream
-        };
-        if (stream) {
-          fetchSSE(
-            url,
-            {
-              method: "POST",
-              headers,
-              body: JSON.stringify(body),
-              signal: abortSignal,
-              onMessage: (data) => {
-                var _a2;
-                if (data === "[DONE]") {
-                  result.text = result.text.trim();
-                  return resolve(result);
+      text: '',
+    }
+    const responseP = new Promise(async (resolve, reject) => {
+      var _a, _b
+      const url = `${this._apiBaseUrl}/v1/chat/completions`
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this._apiKey}`,
+      }
+      if (this._organization) {
+        headers['OpenAI-Organization'] = this._organization
+      }
+      const body = {
+        ...this._completionParams,
+        ...completionParams,
+        messages,
+        stream,
+      }
+      if (stream) {
+        fetchSSE(
+          url,
+          {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body),
+            signal: abortSignal,
+            onMessage: (data) => {
+              var _a2
+              if (data === '[DONE]') {
+                result.text = result.text.trim()
+                return resolve(result)
+              }
+              try {
+                const response = JSON.parse(data)
+                if (response.id) {
+                  result.id = response.id
                 }
-                try {
-                  const response = JSON.parse(data);
-                  if (response.id) {
-                    result.id = response.id;
+                if ((_a2 = response == null ? void 0 : response.choices) == null ? void 0 : _a2.length) {
+                  const delta = response.choices[0].delta
+                  result.delta = delta.content
+                  if (delta == null ? void 0 : delta.content) result.text += delta.content
+                  result.detail = response
+                  if (delta.role) {
+                    result.role = delta.role
                   }
-                  if ((_a2 = response == null ? void 0 : response.choices) == null ? void 0 : _a2.length) {
-                    const delta = response.choices[0].delta;
-                    result.delta = delta.content;
-                    if (delta == null ? void 0 : delta.content)
-                      result.text += delta.content;
-                    result.detail = response;
-                    if (delta.role) {
-                      result.role = delta.role;
-                    }
-                    onProgress == null ? void 0 : onProgress(result);
-                  }
-                } catch (err) {
-                  console.warn("OpenAI stream SEE event unexpected error", err);
-                  return reject(err);
+                  onProgress == null ? void 0 : onProgress(result)
                 }
+              } catch (err) {
+                console.warn('OpenAI stream SEE event unexpected error', err)
+                return reject(err)
               }
             },
-            this._fetch
-          ).catch(reject);
-        } else {
-          try {
-            const res = await this._fetch(url, {
-              method: "POST",
-              headers,
-              body: JSON.stringify(body),
-              signal: abortSignal
-            });
-            if (!res.ok) {
-              const reason = await res.text();
-              const msg = `OpenAI error ${res.status || res.statusText}: ${reason}`;
-              const error = new ChatGPTError(msg, { cause: res });
-              error.statusCode = res.status;
-              error.statusText = res.statusText;
-              return reject(error);
-            }
-            const response = await res.json();
-            if (this._debug) {
-              console.log(response);
-            }
-            if (response == null ? void 0 : response.id) {
-              result.id = response.id;
-            }
-            if ((_a = response == null ? void 0 : response.choices) == null ? void 0 : _a.length) {
-              const message2 = response.choices[0].message;
-              result.text = message2.content;
-              if (message2.role) {
-                result.role = message2.role;
-              }
-            } else {
-              const res2 = response;
-              return reject(
-                new Error(
-                  `OpenAI error: ${((_b = res2 == null ? void 0 : res2.detail) == null ? void 0 : _b.message) || (res2 == null ? void 0 : res2.detail) || "unknown"}`
-                )
-              );
-            }
-            result.detail = response;
-            return resolve(result);
-          } catch (err) {
-            return reject(err);
+          },
+          this._fetch
+        ).catch(reject)
+      } else {
+        try {
+          const res = await this._fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body),
+            signal: abortSignal,
+          })
+          if (!res.ok) {
+            const reason = await res.text()
+            const msg = `OpenAI error ${res.status || res.statusText}: ${reason}`
+            const error = new ChatGPTError(msg, { cause: res })
+            error.statusCode = res.status
+            error.statusText = res.statusText
+            return reject(error)
           }
+          const response = await res.json()
+          if (this._debug) {
+            console.log(response)
+          }
+          if (response == null ? void 0 : response.id) {
+            result.id = response.id
+          }
+          if ((_a = response == null ? void 0 : response.choices) == null ? void 0 : _a.length) {
+            const message2 = response.choices[0].message
+            result.text = message2.content
+            if (message2.role) {
+              result.role = message2.role
+            }
+          } else {
+            const res2 = response
+            return reject(
+              new Error(
+                `OpenAI error: ${
+                  ((_b = res2 == null ? void 0 : res2.detail) == null ? void 0 : _b.message) ||
+                  (res2 == null ? void 0 : res2.detail) ||
+                  'unknown'
+                }`
+              )
+            )
+          }
+          result.detail = response
+          return resolve(result)
+        } catch (err) {
+          return reject(err)
         }
       }
-    ).then((message2) => {
-      return this._upsertMessage(message2).then(() => message2);
-    });
+    }).then((message2) => {
+      return this._upsertMessage(message2).then(() => message2)
+    })
     if (timeoutMs) {
       if (abortController) {
-        ;
         responseP.cancel = () => {
-          abortController.abort();
-        };
+          abortController.abort()
+        }
       }
       return pTimeout(responseP, {
         milliseconds: timeoutMs,
-        message: "OpenAI timed out waiting for response"
-      });
+        message: 'OpenAI timed out waiting for response',
+      })
     } else {
-      return responseP;
+      return responseP
     }
   }
   get apiKey() {
-    return this._apiKey;
+    return this._apiKey
   }
   set apiKey(apiKey) {
-    this._apiKey = apiKey;
+    this._apiKey = apiKey
   }
   async _buildMessages(text, opts) {
-    const { systemMessage = this._systemMessage } = opts;
-    let { parentMessageId } = opts;
-    const userLabel = USER_LABEL_DEFAULT;
-    const assistantLabel = ASSISTANT_LABEL_DEFAULT;
-    let messages = [];
+    const { systemMessage = this._systemMessage } = opts
+    let { parentMessageId } = opts
+    const userLabel = USER_LABEL_DEFAULT
+    const assistantLabel = ASSISTANT_LABEL_DEFAULT
+    let messages = []
     if (systemMessage) {
       messages.push({
-        role: "system",
-        content: systemMessage
-      });
+        role: 'system',
+        content: systemMessage,
+      })
     }
-    const systemMessageOffset = messages.length;
-    let nextMessages = text ? messages.concat([
-      {
-        role: "user",
-        content: text,
-        name: opts.name
-      }
-    ]) : messages;
+    const systemMessageOffset = messages.length
+    let nextMessages = text
+      ? messages.concat([
+          {
+            role: 'user',
+            content: text,
+            name: opts.name,
+          },
+        ])
+      : messages
     do {
-      const prompt = nextMessages.reduce((prompt2, message) => {
-        switch (message.role) {
-          case "system":
-            return prompt2.concat([`Instructions:
-${message.content}`]);
-          case "user":
-            return prompt2.concat([`${userLabel}:
-${message.content}`]);
-          default:
-            return prompt2.concat([`${assistantLabel}:
-${message.content}`]);
-        }
-      }, []).join("\n\n");
-      messages = nextMessages;
+      const prompt = nextMessages
+        .reduce((prompt2, message) => {
+          switch (message.role) {
+            case 'system':
+              return prompt2.concat([
+                `Instructions:
+${message.content}`,
+              ])
+            case 'user':
+              return prompt2.concat([
+                `${userLabel}:
+${message.content}`,
+              ])
+            default:
+              return prompt2.concat([
+                `${assistantLabel}:
+${message.content}`,
+              ])
+          }
+        }, [])
+        .join('\n\n')
+      messages = nextMessages
       if (!parentMessageId) {
-        break;
+        break
       }
-      const parentMessage = await this._getMessageById(parentMessageId);
+      const parentMessage = await this._getMessageById(parentMessageId)
       if (!parentMessage) {
-        break;
+        break
       }
-      const parentMessageRole = parentMessage.role || "user";
+      const parentMessageRole = parentMessage.role || 'user'
       nextMessages = nextMessages.slice(0, systemMessageOffset).concat([
         {
           role: parentMessageRole,
           content: parentMessage.text,
-          name: parentMessage.name
+          name: parentMessage.name,
         },
-        ...nextMessages.slice(systemMessageOffset)
-      ]);
-      parentMessageId = parentMessage.parentMessageId;
-    } while (true);
-    return { messages };
+        ...nextMessages.slice(systemMessageOffset),
+      ])
+      parentMessageId = parentMessage.parentMessageId
+    } while (true)
+    return { messages }
   }
   // protected get _isCodexModel() {
   //   return this._completionParams.model.startsWith('code-')
   // }
   async _defaultGetMessageById(id) {
-    const res = await this._messageStore.get(id);
-    return res;
+    const res = await this._messageStore.get(id)
+    return res
   }
   async _defaultUpsertMessage(message) {
-    await this._messageStore.set(message.id, message);
+    await this._messageStore.set(message.id, message)
   }
-};
-export {
-  ChatGPTAPI,
-  ChatGPTError,
-  openai
-};
+}
+export { ChatGPTAPI, ChatGPTError, openai }
 //# sourceMappingURL=index.js.map
