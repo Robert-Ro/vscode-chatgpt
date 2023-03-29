@@ -1,8 +1,8 @@
 {
-  "name": "vscode-chatgpt",
-  "displayName": "vscode-chatgpt",
-  "version": "3.9.7-0",
-  "description": "vscode-chatgpt",
+  "name": "@liutsing/vscode-chatgpt",
+  "displayName": "@liutsing/vscode-chatgpt",
+  "version": "0.1.0",
+  "description": "@liutsing/vscode-chatgpt",
   "categories": [
     "Testing",
     "Data Science",
@@ -26,9 +26,9 @@
     "ai"
   ],
   "repository": {
-    "url": "https://github.com/YOUR_PUBLISHER_NAME/vscode-chatgpt"
+    "url": "https://github.com/Robert-Ro/vscode-chatgpt"
   },
-  "publisher": "YOUR_PUBLISHER_NAME",
+  "publisher": "liutsing-robert",
   "main": "./out/extension.js",
   "scripts": {
     "build": "npm run -S esbuild-base -- --sourcemap",
@@ -67,6 +67,11 @@
       {
         "command": "vscode-chatgpt.optimize",
         "title": "ChatGPT: Optimize",
+        "enablement": "editorHasSelection"
+      },
+      {
+        "command": "vscode-chatgpt.translate",
+        "title": "ChatGPT: Translate",
         "enablement": "editorHasSelection"
       },
       {
@@ -201,6 +206,18 @@
           "default": true,
           "description": "Enable the prompt prefix used for optimizing the selected code in the context menu",
           "order": 13
+        },
+        "chatgpt.promptPrefix.translate": {
+          "type": "string",
+          "default": "Translate the following selection to chinese",
+          "description": "The prompt prefix used for translate following selection to chinese",
+          "order": 33
+        },
+        "chatgpt.promptPrefix.translate-enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the prompt prefix used for translate following selection to chinese in the context menu",
+          "order": 34
         },
         "chatgpt.promptPrefix.explain": {
           "type": "string",
@@ -390,6 +407,12 @@
         "when": "editorHasSelection"
       },
       {
+        "command": "vscode-chatgpt.translate",
+        "key": "ctrl+k ctrl+shift+0",
+        "mac": "cmd+k cmd+shift+0",
+        "when": "editorHasSelection"
+      },
+      {
         "command": "vscode-chatgpt.explain",
         "key": "ctrl+k ctrl+shift+4",
         "mac": "cmd+k cmd+shift+4",
@@ -447,6 +470,11 @@
           "command": "vscode-chatgpt.optimize",
           "group": "chatGpt@4",
           "when": "editorHasSelection && optimize-enabled"
+        },
+        {
+          "command": "vscode-chatgpt.translate",
+          "group": "chatGpt@11",
+          "when": "editorHasSelection && translate-enabled"
         },
         {
           "command": "vscode-chatgpt.explain",
